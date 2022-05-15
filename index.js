@@ -234,6 +234,9 @@ exports.handler = function () {
             Object.keys(legiscanResponse.history).length,
         );
 
+        //Save bill status (same fix as in master branch)
+        updateBillInData(bills, legiscanResponse.bill_id, currentBill.status);
+
         //Tweet
         const tweetData = utilityFuncs.chunkSubstr(intro + title + description, 275);
         tweetData.push(
@@ -323,6 +326,20 @@ exports.handler = function () {
                         twitterFuncs.sendTweet(tweetData);
                     }
                 }
+            }
+        }
+    }
+
+    function updateBillInData(array, item, status) {
+        for (let i = 0; i < array.length; i++) {
+            if (array[i].id == item) {
+                array[i].status = status;
+                await s3.putObject({
+                    Bucket: "tracktransbills",
+                    Key: CONTENT_INDEX_FILENAME,
+                    Body: JSON.stringify(array),
+                    ContentType: 'application/json'
+                }).promise();
             }
         }
     }
